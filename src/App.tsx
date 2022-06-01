@@ -6,7 +6,8 @@ const tickLoadingMs = 500;
 const maxLoadingCount = 4;
 const ipURL = 'https://geolocation-db.com/json/';
 
-const preTemplate = `Last login: {{user-data}}
+const preTemplate = `
+Last login: {{user-data}}
 
 ~  Online home of Joakim Kronqvist
 ~  Full-stack developer
@@ -96,6 +97,7 @@ const App = () => {
     setTemplate(t);
     setHasLoaded(true);
     clearInterval(loadingTimer.current);
+    setText('');
     startConsole();
   }, [startConsole]);
 
