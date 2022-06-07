@@ -1,4 +1,11 @@
-import {useCallback, useEffect, useRef, useState} from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useMemo,
+  Fragment,
+} from 'react';
 import './App.css';
 import useInterval from './hooks/useInterval';
 
@@ -15,14 +22,21 @@ Last login: {{user-data}}
 ~  Working as a senior mobile developer at Starship Technologies
 ~  Co-founder of DayStable
 
-     [Open LinkedIn ->](https://google.com)
+     [Open LinkedIn ->](https://www.linkedin.com/in/jkro/)
 
-     [Open Github ->](https://google.com)
+     [Open Github ->](https://github.com/kronken)
 
 ~  Hobby photographer
 
-    [Open my Instagram ->](https://google.com)
+    [Open my Instagram ->](https://www.instagram.com/bumblebeetushie)
 `;
+
+interface Cache {
+  [line: number]: {
+    title: string;
+    href: string;
+  };
+}
 
 const App = () => {
   const [loadingText, setLoadingText] = useState('');
@@ -30,6 +44,7 @@ const App = () => {
   const [template, setTemplate] = useState('');
   const [pointer, setPointer] = useState(0);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const cache = useRef<Cache>({});
 
   const tickCounterRef = useRef<number>(0);
 
@@ -43,6 +58,56 @@ const App = () => {
         .join(''),
     );
   }, []);
+
+  useEffect(() => {
+    document.title = 'Joakim Kronqvist';
+  }, []);
+
+  const renderText = useMemo(() => {
+    return text.split(/\r?\n/).map((line, index) => {
+      if (line) {
+        const lineCache = cache.current[index];
+        if (lineCache) {
+          return (
+            <Fragment key={index}>
+              <a href={lineCache.href}>{lineCache.title}</a>
+              <br />
+              <br />
+            </Fragment>
+          );
+        } else if (line.includes('[')) {
+          var titleRegex = /\[(.*?)\]/;
+          var titleArray = titleRegex.exec(line);
+          const title = titleArray
+            ? titleArray[0].replace('[', '').replace(']', '')
+            : null;
+
+          var hrefRegex = /\((.*?)\)/;
+          var hrefArray = hrefRegex.exec(preTemplate.split(/\r?\n/)[index]);
+          const href = hrefArray
+            ? hrefArray[0].replace('(', '').replace(')', '')
+            : null;
+
+          if (title && href) {
+            cache.current[index] = {
+              href,
+              title,
+            };
+            return (
+              <Fragment key={index}>
+                <a href={href}>{title}</a>
+                <br />
+                <br />
+              </Fragment>
+            );
+          }
+        } else {
+          return <p key={index}>{line}</p>;
+        }
+      }
+      return null;
+    });
+  }, [text]);
 
   const tickText = useCallback(() => {
     if (pointer !== template.length) {
@@ -85,7 +150,7 @@ const App = () => {
   return (
     <div className="App">
       <span style={{whiteSpace: 'pre-wrap'}}>
-        {hasLoaded ? text : loadingText}
+        {hasLoaded ? renderText : loadingText}
       </span>
     </div>
   );
