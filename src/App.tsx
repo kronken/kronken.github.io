@@ -22,9 +22,9 @@ Last login: {{user-data}}
 ~  Working as a senior mobile developer at Starship Technologies
 ~  Co-founder of DayStable
 
-     [Open LinkedIn ->](https://www.linkedin.com/in/jkro/)
+     [Open my LinkedIn ->](https://www.linkedin.com/in/jkro/)
 
-     [Open Github ->](https://github.com/kronken)
+     [Open my Github ->](https://github.com/kronken)
 
 ~  Hobby photographer
 
