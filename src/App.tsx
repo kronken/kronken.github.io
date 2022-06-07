@@ -1,9 +1,10 @@
 import {useCallback, useEffect, useRef, useState} from 'react';
 import './App.css';
+import useInterval from './hooks/useInterval';
 
 const tickMs = 25;
-const tickLoadingMs = 500;
-const maxLoadingCount = 4;
+const loadingMultiplier = 60;
+const loadingDots = 4;
 const ipURL = 'https://geolocation-db.com/json/';
 
 const preTemplate = `
@@ -24,67 +25,42 @@ Last login: {{user-data}}
 `;
 
 const App = () => {
+  const [loadingText, setLoadingText] = useState('');
   const [text, setText] = useState('');
   const [template, setTemplate] = useState('');
   const [pointer, setPointer] = useState(0);
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [loadingCount, setLoadingCount] = useState(0);
-  const savedCallback = useRef<() => void>();
-  const savedLoadingCallback = useRef<() => void>();
-  const timer = useRef<NodeJS.Timer | undefined>();
-  const loadingTimer = useRef<NodeJS.Timer | undefined>();
 
-  const writeNextChar = useCallback(() => {
+  const tickCounterRef = useRef<number>(0);
+
+  const tickLoading = useCallback(() => {
+    const mod = tickCounterRef.current % loadingMultiplier;
+    const nextCount = Math.floor((mod / loadingMultiplier) * loadingDots);
+    setLoadingText(
+      Array(nextCount)
+        .fill(0)
+        .map(() => '.')
+        .join(''),
+    );
+  }, []);
+
+  const tickText = useCallback(() => {
     if (pointer !== template.length) {
       const char = template[pointer];
       let insertChar = char;
       setText(text + insertChar);
       setPointer(pointer + 1);
-    } else {
-      clearInterval(timer.current);
     }
   }, [pointer, template, text]);
 
-  useEffect(() => {
-    savedCallback.current = writeNextChar;
-  }, [writeNextChar]);
-
-  const startConsole = useCallback(() => {
-    const tick = () => {
-      if (savedCallback.current) {
-        savedCallback.current();
-      }
-    };
-    timer.current = setInterval(tick, tickMs);
-    return () => clearInterval(timer.current);
-  }, []);
-
-  const writeNextLoadingState = useCallback(() => {
+  useInterval(() => {
     if (!hasLoaded) {
-      const nextCount = (loadingCount + 1) % maxLoadingCount;
-      setText(
-        Array(nextCount)
-          .fill(0)
-          .map(() => '.')
-          .join(''),
-      );
-      setLoadingCount(nextCount);
+      tickLoading();
+    } else {
+      tickText();
     }
-  }, [hasLoaded, loadingCount]);
-
-  useEffect(() => {
-    savedLoadingCallback.current = writeNextLoadingState;
-  }, [writeNextLoadingState]);
-
-  const startLoading = useCallback(() => {
-    const tick = () => {
-      if (savedLoadingCallback.current) {
-        savedLoadingCallback.current();
-      }
-    };
-    loadingTimer.current = setInterval(tick, tickLoadingMs);
-    return () => clearInterval(loadingTimer.current);
-  }, []);
+    tickCounterRef.current = tickCounterRef.current + 1;
+  }, tickMs);
 
   const fetchData = useCallback(async () => {
     const data = await fetch(ipURL);
@@ -96,13 +72,9 @@ const App = () => {
     const t = preTemplate.replace('{{user-data}}', text);
     setTemplate(t);
     setHasLoaded(true);
-    clearInterval(loadingTimer.current);
-    setText('');
-    startConsole();
-  }, [startConsole]);
+  }, []);
 
   useEffect(() => {
-    startLoading();
     setTimeout(() => {
       fetchData();
     }, 2000);
@@ -112,7 +84,9 @@ const App = () => {
 
   return (
     <div className="App">
-      <span style={{whiteSpace: 'pre-wrap'}}>{text}</span>
+      <span style={{whiteSpace: 'pre-wrap'}}>
+        {hasLoaded ? text : loadingText}
+      </span>
     </div>
   );
 };
