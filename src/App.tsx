@@ -59,22 +59,23 @@ const App = () => {
     );
   }, []);
 
-  useEffect(() => {
-    document.title = 'Joakim Kronqvist';
-  }, []);
+  const renderLink = useCallback(
+    (key: number, href: string, text: string) => (
+      <Fragment key={key}>
+        <a href={href}>{text}</a>
+        <br />
+        <br />
+      </Fragment>
+    ),
+    [],
+  );
 
   const renderText = useMemo(() => {
     return text.split(/\r?\n/).map((line, index) => {
       if (line) {
         const lineCache = cache.current[index];
         if (lineCache) {
-          return (
-            <Fragment key={index}>
-              <a href={lineCache.href}>{lineCache.title}</a>
-              <br />
-              <br />
-            </Fragment>
-          );
+          return renderLink(index, lineCache.href, lineCache.title);
         } else if (line.includes('[')) {
           var titleRegex = /\[(.*?)\]/;
           var titleArray = titleRegex.exec(line);
@@ -93,21 +94,17 @@ const App = () => {
               href,
               title,
             };
-            return (
-              <Fragment key={index}>
-                <a href={href}>{title}</a>
-                <br />
-                <br />
-              </Fragment>
-            );
+            return renderLink(index, href, title);
           }
+          const tmpTitle = line.trim().split(']')[0].replace('[', '');
+          return renderLink(index, href || '', tmpTitle);
         } else {
           return <p key={index}>{line}</p>;
         }
       }
       return null;
     });
-  }, [text]);
+  }, [renderLink, text]);
 
   const tickText = useCallback(() => {
     if (pointer !== template.length) {
@@ -139,13 +136,19 @@ const App = () => {
     setHasLoaded(true);
   }, []);
 
-  useEffect(() => {
+  const init = useCallback(() => {
+    document.title = 'Joakim Kronqvist';
+
     setTimeout(() => {
       fetchData();
     }, 2000);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    init();
+  }, [init]);
 
   return (
     <div className="App">
