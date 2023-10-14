@@ -1,5 +1,6 @@
 import {useEffect, useRef} from 'react';
 
+// noop, not noob
 const noop = () => {};
 
 export function useInterval(
