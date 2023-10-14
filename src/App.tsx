@@ -19,7 +19,7 @@ Last login: {{user-data}}
 
 ~  Online home of Joakim Kronqvist
 ~  Full-stack developer
-~  Working as a senior mobile developer at Starship Technologies
+~  Working as a principal mobile developer at Starship Technologies
 ~  Co-founder of DayStable
 
      [Open my LinkedIn ->](https://www.linkedin.com/in/jkro/)
